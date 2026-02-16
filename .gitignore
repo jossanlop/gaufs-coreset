@@ -1,6 +1,8 @@
 out/
 out2/
 data/
+.venv/
+feature_distributions/
 
 __pycache__/
 *.pyc
