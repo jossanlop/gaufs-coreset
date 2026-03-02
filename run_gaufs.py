@@ -14,7 +14,8 @@ from gaufs import Gaufs
 # ---------------------------------------------------------------------------
 # 1. Data loading and preparation
 # ---------------------------------------------------------------------------
-DATA_FILE = "data/split_by_element/ag02_daily_means.csv"
+# DATA_FILE = "data/split_by_element/ag02_daily_means_standard_normalized.csv"
+DATA_FILE = "results/out_ag02_seed_10/results/final_clustering_no_cluster_0.csv"
 
 
 def main():
@@ -24,6 +25,7 @@ def main():
     df.drop(columns=['YawState','ActivePowerSetpoint','AlarmCode',
                     'GearOilInletPress','ReactivePowerSetPoint','TotalQProduction'], 
             inplace=True, errors='ignore')  # Remove index column if present
+    df.drop(columns=['cluster'], inplace=True, errors='ignore')
 
     # Select only numeric features (exclude timestamps, strings, etc.)
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -44,11 +46,19 @@ def main():
     # ---------------------------------------------------------------------------
     # 2. Run GAUFS
     # ---------------------------------------------------------------------------
+    
+    seed = 11
+
     gaufs = Gaufs(
+        seed=seed,
+        ngen=150,
+        npop=1500,
+        mutpb = 0.1, # mutation probability
+        num_genetic_executions=1,
         unlabeled_data=features_df,
-        cluster_number_search_band=(2, 15),
-        seed=42,
-        output_directory="out_ag02/",
+        cluster_number_search_band=(2, 8),
+
+        output_directory=f"results/out_ag02_seed_{seed}/",
     )
 
     optimal_solution, _ = gaufs.run()
