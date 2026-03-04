@@ -21,6 +21,7 @@ import numpy as np
 from pathlib import Path
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from gaufs import Gaufs
+from cluster_stats_calculator import compute_cluster_statistics, create_iteration_summary_csv
 
 
 # ---------------------------------------------------------------------------
@@ -274,6 +275,10 @@ class IterativeGaufs:
         with open(iteration_dir / "summary.json", "w") as f:
             json.dump(summary, f, indent=2)
         
+        # Compute and save cluster statistics
+        print(f"\n[Step 4] Computing cluster statistics...")
+        compute_cluster_statistics(data_with_labels, iteration, iteration_dir)
+        
         print(f"\n  - Saved results to {iteration_dir}")
         
         return summary
@@ -328,6 +333,12 @@ class IterativeGaufs:
                   f"{result['num_selected_features']} features, "
                   f"{result['optimal_clusters']} clusters, "
                   f"fitness={result['fitness']:.4f}")
+        
+        # Create iteration summary CSV
+        print(f"\n{'='*80}")
+        print("Generating iteration summary...")
+        print(f"{'='*80}")
+        create_iteration_summary_csv(self.output_dir, max_iterations=self.max_iterations)
         
         return self.history
 
