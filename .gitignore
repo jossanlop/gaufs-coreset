@@ -3,6 +3,8 @@ out2/
 data/
 .venv/
 feature_distributions/
+results
+logs
 
 __pycache__/
 *.pyc

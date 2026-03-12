@@ -357,3 +357,92 @@ def compute_all_iterations_statistics(
         all_stats[iteration] = stats_df
     
     return all_stats
+
+def create_tree_summary_csv(
+    results_dir: Path | str,
+    output_filename: str = "tree_statistics_summary.csv",
+) -> pd.DataFrame:
+    """
+    Create a summary CSV file for tree-based iterative search results.
+    
+    Aggregates mean values and cluster sizes from cluster_statistics.csv files in each node
+    into a single CSV with one row per (depth, node_id, cluster) combination.
+    
+    Parameters
+    ----------
+    results_dir : Path or str
+        Root results directory (e.g., 'results/iterative_search_tree').
+    output_filename : str
+        Name of the output summary file. Default is 'tree_statistics_summary.csv'.
+    
+    Returns
+    -------
+    pd.DataFrame
+        Summary DataFrame with columns: depth, node_id, cluster, cluster_size, feature_1_mean, ...
+    """
+    results_dir = Path(results_dir)
+    summary_rows = []
+    
+    # Find all depth directories
+    depth_dirs = sorted([d for d in results_dir.iterdir() if d.is_dir() and d.name.startswith('depth_')])
+    
+    for depth_dir in depth_dirs:
+        depth = int(depth_dir.name.split('_')[1])
+        
+        # Find all node directories within this depth
+        node_dirs = sorted([d for d in depth_dir.iterdir() if d.is_dir() and d.name.startswith('node_')])
+        
+        for node_dir in node_dirs:
+            node_id = node_dir.name
+            stats_file = node_dir / 'cluster_statistics.csv'
+            
+            if not stats_file.exists():
+                continue
+            
+            try:
+                # Load cluster statistics for this node
+                stats_df = pd.read_csv(stats_file, index_col=0)
+                
+                # Extract only mean columns
+                mean_cols = [col for col in stats_df.columns if col.endswith('_mean')]
+                
+                for cluster_id in stats_df.index:
+                    row = {'depth': depth, 'node_id': node_id, 'cluster': cluster_id}
+                    
+                    # Add cluster size
+                    if 'cluster_size' in stats_df.columns:
+                        row['cluster_size'] = int(stats_df.loc[cluster_id, 'cluster_size'])
+                    
+                    # Add mean values for all features
+                    for col in mean_cols:
+                        row[col] = stats_df.loc[cluster_id, col]
+                    
+                    summary_rows.append(row)
+            except Exception as e:
+                print(f"Warning: Error processing {stats_file}: {e}")
+                continue
+    
+    if not summary_rows:
+        print(f"No cluster statistics found in {results_dir}")
+        return pd.DataFrame()
+    
+    # Create summary DataFrame
+    summary_df = pd.DataFrame(summary_rows)
+    
+    # Ensure proper column order: depth, node_id, cluster, cluster_size, then feature means
+    cols = ['depth', 'node_id', 'cluster', 'cluster_size']
+    mean_cols = sorted([col for col in summary_df.columns if col.endswith('_mean')])
+    col_order = [c for c in cols if c in summary_df.columns] + mean_cols
+    summary_df = summary_df[col_order]
+    
+    # Save summary
+    output_file = results_dir / output_filename
+    summary_df.to_csv(output_file, index=False)
+    
+    print(f"Saved tree summary to {output_file}")
+    print(f"  - Shape: {summary_df.shape}")
+    print(f"  - Depths: {summary_df['depth'].min()}-{summary_df['depth'].max()}")
+    print(f"  - Total nodes: {summary_df['node_id'].nunique()}")
+    print(f"  - Total rows: {len(summary_df)}")
+    
+    return summary_df

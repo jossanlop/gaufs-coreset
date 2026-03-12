@@ -19,8 +19,8 @@ SCALERS = {
 
 
 # Manual configuration (edit as needed)
-INPUT_PATH = "/home/josee/gaufs-coreset/data/split_by_element/ag02.csv"
-OUTPUT_AGGREGATED = "/home/josee/gaufs-coreset/data/split_by_element/ag02_daily_means.csv"
+INPUT_PATH = "/home/josee/gaufs-coreset/data/split_by_element/ag10.csv"
+OUTPUT_AGGREGATED = "/home/josee/gaufs-coreset/data/split_by_element/ag10_daily_means.csv"
 NORMALIZATION_METHOD = "standard"  # standard | minmax | maxabs | robust | normalize
 OUTPUT_NORMALIZED = None  # set a path or leave None to auto-generate
 
